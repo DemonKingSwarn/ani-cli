@@ -15,15 +15,15 @@ help_text () {
 	done <<-EOF
 
 	Usage:
-	  ${0##*/} [-f] [-s] [-v] [-x] [-q <quality>] [-a <episode>] [-d | -p <download_dir>] [<query>] [-r <provider_no.>]
-	  ${0##*/} [-f] [-s] [-v] [-x] [-q <quality>] -c
+	  ${0##*/} [-R] [-s] [-v] [-x] [-q <quality>] [-a <episode>] [-d | -p <download_dir>] [<query>] [-r <provider_no.>]
+	  ${0##*/} [-R] [-s] [-v] [-x] [-q <quality>] -c
 	  ${0##*/} -h | -D | -U | -V
 
 	Options:
 	  -v use VLC as the media player
 	  -q set video quality (best|worst|360|480|720|1080)
 	  -s watch anime together with friends, using Syncplay (works with mpv only)
-	  -f use fzf for anime selection
+	  -R use rofi for anime selection
 	  -a specify episode to watch
 	  -d download episode
 	  -p download episode to specified directory
@@ -102,8 +102,8 @@ selection_menu() {
 	prompt
 }
 
-selection_menu_fzf() {
-	printf "%s\n%s" "$1" "$2" | fzf --height=30% --border -1 --layout=reverse --header-first --header-lines=1 --cycle --with-nth 2.. | cut -f1 -d' '
+selection_menu_rofi() {
+	printf "%s\n%s" "$1" "$2" | rofi -dmenu -i | cut -f1 -d' '
 }
 
 version_text () {
@@ -359,7 +359,7 @@ process_search () {
 
 # anime-selection menu handling function
 anime_selection () {
-	if [ "$fzf" -eq 0 ];then
+	if [ "$rofi" -eq 0 ];then
 		inf "$scrape Results >>"
 	else
 		progress ""
@@ -378,8 +378,8 @@ anime_selection () {
 		choice=1
 	elif [ -z "$ep_choice_to_start" ] || { [ -n "$ep_choice_to_start" ] && [ -z "$select_first" ]; }; then
 		selection_list=$(append "$selection_list" "quit" "q")
-	if [ "$fzf" -eq 1 ]; then
-		choice=$(selection_menu_fzf ". $scrape Results>>" "$selection_list")
+	if [ "$rofi" -eq 1 ]; then
+		choice=$(selection_menu_rofi ". $scrape Results>>" "$selection_list")
 		[ -z "$choice" ] && exit 0
 	else
 		selection_menu "$selection_list"
@@ -539,7 +539,7 @@ provider_name=""
 scrape=Query
 debug=0
 choice=
-fzf=0
+rofi=0
 auto_play=0
 download_dir="$(pwd)"
 case "$(uname)" in
@@ -555,7 +555,7 @@ tmpdir="$logdir/ani-temp"
 [ -d "$logdir" ] || mkdir "$logdir"
 [ -f "$logfile" ] || : > "$logfile"
 
-while getopts 'svq:dp:chDUVa:xr:fn' OPT; do
+while getopts 'svq:dp:chDUVa:xr:Rn' OPT; do
 	case $OPT in
 		d) player_fn='download' ;;
 		a) ep_choice_to_start=$OPTARG ;;
@@ -579,7 +579,7 @@ while getopts 'svq:dp:chDUVa:xr:fn' OPT; do
 		q) quality=$OPTARG ;;
 		x) debug=1 ;;
 		r) select_provider=$OPTARG ;;
-		f) fzf=1 ;;
+		R) rofi=1 ;;
 		c) scrape=History ;;
 		v) player_fn='vlc';;
 		V)
@@ -645,9 +645,9 @@ while : ; do
 	menu=$(append "$menu" 'replay' 'r')
 	[ "$first_ep_number" -ne "$last_ep_number" ] && menu=$(append "$menu" 'select' 's')
 	menu=$(append "$menu" 'quit' 'q')
-	if [ "$fzf" -eq 1 ];then
+	if [ "$rofi" -eq 1 ];then
 		progress ""
-		choice="$(selection_menu_fzf ". Menu>>" "$menu")"
+		choice="$(selection_menu_rofi ". Menu>>" "$menu")"
 		[ -z "$choice" ] && exit 0
 	else
 		selection_menu "$menu"
