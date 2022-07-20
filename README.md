@@ -60,7 +60,7 @@ We now scrape animixplay instead of gogoanime, which allows for faster link fetc
 releases sooner.
 
 New arguments:
--f use fzf for anime selection
+-R use rofi for anime selection
 -r [1-3] select provider to scrape first
 -x print all video links from all providers to stdout (for debugging purpose)
 
@@ -178,7 +178,7 @@ rm "$PREFIX/bin/ani-cli"
 - iina - mpv replacement for MacOS
 - axel - Download manager
 - ffmpeg - m3u8 Downloader
-- fzf (optional)
+- rofi (optional)
 
 ## Homies 
 
